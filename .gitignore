@@ -1,0 +1,6 @@
+# Intermediates
+*.o
+*.exe
+
+# Makefiles
+*Makefile*
