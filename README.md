@@ -3,8 +3,8 @@
 ## Setup
 - [x] Start project file structure
 - [x] Makefiles and compilation testing
-- [ ] Init .git
-- [ ] Github!
+- [x] Init .git
+- [x] Github!
 - [ ] Checklist done! Delete it!
 
 ## The Fun Part:
