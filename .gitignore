@@ -1,3 +1,4 @@
 # Intermediates
 *.o
 *.exe
+*.debug
