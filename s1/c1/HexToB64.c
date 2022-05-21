@@ -52,6 +52,11 @@ char b64_char_from_byte(const unsigned char byte)
 	return b64Alphabet[(short)byte];
 }
 
+/* FIXME: Try making an unsigned int buffer instead of a byte buffer.
+	As is, it seems the cpyByteArr is not as contiguous as assumed.
+	If we can just copy the 24 bit groups into ints from the jump,
+	 we can consolidate memory and maybe fix this bug.
+*/
 const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 {
 	// Temp-copy the byte array since we'll get more chars out than bytes in.
@@ -62,6 +67,7 @@ const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 	const unsigned char B64_CHAR_BITMASK = 0x3F;	//Mask: 0011 1111 => 0x3F
 	const short B64_PHRASE_BYTES = 3;
 	const short B64_PHRASE_BITS = 24;
+	const short B64_CHAR_PER_PHRASE = 4;
 	const short B64_CHAR_BITS = 6;
 	
 	unsigned int b64CharAlignedBits, * b64PhraseWindow;
@@ -72,11 +78,15 @@ const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 		//  We only care about the highest 24, but theres no pointer type with a 24 bit bound.
 		b64PhraseWindow = (int*)(cpyByteArr+i);	// Violate byte bounds by starting the int pointer at every 3rd byte.
 		
-		for(short j = 0; j < B64_PHRASE_BYTES; j++)	// FIXME: Can buffer overflow
+		for(short j = 0; j < B64_CHAR_PER_PHRASE; j++)	// FIXME: Can buffer overflow
 		{
 			b64CharAlignedBits = *b64PhraseWindow >> (B64_PHRASE_BITS - (j * B64_CHAR_BITS));	// Shift the 6 bits we want to be the 6 least significant bits for each char.
-			byteArr[i+j] = B64_CHAR_BITMASK && (unsigned char)b64CharAlignedBits;				// Since we kept everything aligned above, we can downcast without loosing the bits we want.
-			byteArr[i+j] = b64_char_from_byte(byteArr[i+j]);
+			// printf("[Is the left shift pattern correct?]: %d\n", (B64_PHRASE_BITS - (j * B64_CHAR_BITS))); // Yes
+			// printf("[Is b64CharAlignedBits changing?]: %u\n", b64CharAlignedBits); // Yes
+			byteArr[(i/3)*4+j] = B64_CHAR_BITMASK & (unsigned char)b64CharAlignedBits;				// Since we kept everything aligned above, we can downcast without loosing the bits we want.
+			// printf("[Is the byte array indexed correctly?]: %d\n", ((i/3)*4+j)); // Yes
+			// printf("[Does the B64_CHAR_BITMASK work?]: %u\n", byteArr[i+j]); // Yes
+			byteArr[(i/3)*4+j] = b64_char_from_byte(byteArr[(i/3)*4+j]);
 		}
 	}
 	
@@ -88,7 +98,8 @@ const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 // NOTE: Little-endian
 int main()
 {
-	const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+	// const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+	const char sourceStr[256] = "414141424242";
 	// printf("We need to convert 0x%s to base 64.\n", sourceStr);
 	// char hexNumStr[6*sizeof(char)] = "000001";
 	
@@ -103,8 +114,8 @@ int main()
 	printf("%s\n", buff);	// Decoded string representation
 	
 	// const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(hexNumStr)/2));
-	// const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(sourceStr)/2));
-	// printf("%s\n", b64Str);
+	const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(sourceStr)/2));
+	printf("%s\n", b64Str);
 	
 	return 0;
 }
