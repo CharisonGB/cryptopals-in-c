@@ -38,8 +38,9 @@ unsigned char * mutate_hex_str_to_byte_arr(const char * hexStr, int length)
 	for(short i = 0; i < length; i+=2)	// Read two characters at a time.
 	{
 		byteArr[i] = byte_from_hex_char(hexStr[i]);				// Use the array itself as temp storage.
-		byteArr[i+1] = byte_from_hex_char(hexStr[i+1]);				// Each converted character only occupies the back half of each byte.
+		byteArr[i+1] = byte_from_hex_char(hexStr[i+1]);			// Each converted character only occupies the back half of each byte.
 		byteArr[(i/2)] = ( (byteArr[i] << 4) | byteArr[i+1] );	// Stuff all the half-bytes into contiguous blocks.
+		// Each byte should be big-endian, even though system is little-endian.
 	}
 	
 	return byteArr;
@@ -52,54 +53,39 @@ char b64_char_from_byte(const unsigned char byte)
 	return b64Alphabet[(short)byte];
 }
 
-/* FIXME: Try making an unsigned int buffer instead of a byte buffer.
-	As is, it seems the cpyByteArr is not as contiguous as assumed.
-	If we can just copy the 24 bit groups into ints from the jump,
-	 we can consolidate memory and maybe fix this bug.
-*/
 const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 {
-	// Temp-copy the byte array since we'll get more chars out than bytes in.
-	//  If we didn't, every fourth byte would always get overwritten before being converted.
-	unsigned char * cpyByteArr = (unsigned char *)malloc(length);
-	strcpy(cpyByteArr, byteArr);
-	
-	const unsigned char B64_CHAR_BITMASK = 0x3F;	//Mask: 0011 1111 => 0x3F
 	const short B64_PHRASE_BYTES = 3;
-	const short B64_PHRASE_BITS = 24;
-	const short B64_CHAR_PER_PHRASE = 4;
-	const short B64_CHAR_BITS = 6;
+	const short B64_PHRASE_CHARS = 4;
+	const short NUM_B64_PHRASES = (length+2)/B64_PHRASE_BYTES;
 	
-	unsigned int b64CharAlignedBits, * b64PhraseWindow;
+	unsigned int * phraseByteArr = (unsigned int * )malloc(NUM_B64_PHRASES);
 	
 	for(short i = 0; i < length; i+=B64_PHRASE_BYTES)
+		phraseByteArr[i/B64_PHRASE_BYTES] = *((int *)(byteArr+i));
+	
+	// TODO: Read b64 chars from phraseByteArr
+	const short B64_CHAR_BITS = 6;
+	const unsigned char B64_CHAR_BITMASK = 0x3F;
+	unsigned char temp;
+	for(short i = 0; i < (NUM_B64_PHRASES*B64_PHRASE_CHARS); i++)	// FIXME: This loop should run more than on iteration per byte, since b64 characters are smaller than a byte.
 	{
-		// Point to each phrase with an int pointer so we can shift all 32 bits as a contiguous block.
-		//  We only care about the highest 24, but theres no pointer type with a 24 bit bound.
-		b64PhraseWindow = (int*)(cpyByteArr+i);	// Violate byte bounds by starting the int pointer at every 3rd byte.
-		
-		for(short j = 0; j < B64_CHAR_PER_PHRASE; j++)	// FIXME: Can buffer overflow
-		{
-			b64CharAlignedBits = *b64PhraseWindow >> (B64_PHRASE_BITS - (j * B64_CHAR_BITS));	// Shift the 6 bits we want to be the 6 least significant bits for each char.
-			// printf("[Is the left shift pattern correct?]: %d\n", (B64_PHRASE_BITS - (j * B64_CHAR_BITS))); // Yes
-			// printf("[Is b64CharAlignedBits changing?]: %u\n", b64CharAlignedBits); // Yes
-			byteArr[(i/3)*4+j] = B64_CHAR_BITMASK & (unsigned char)b64CharAlignedBits;				// Since we kept everything aligned above, we can downcast without loosing the bits we want.
-			// printf("[Is the byte array indexed correctly?]: %d\n", ((i/3)*4+j)); // Yes
-			// printf("[Does the B64_CHAR_BITMASK work?]: %u\n", byteArr[i+j]); // Yes
-			byteArr[(i/3)*4+j] = b64_char_from_byte(byteArr[(i/3)*4+j]);
-		}
+		temp = B64_CHAR_BITMASK & phraseByteArr[i/B64_PHRASE_BYTES];
+		phraseByteArr[i/B64_PHRASE_CHARS] >>= B64_CHAR_BITS;
+		// temp = B64_CHAR_BITMASK & ( phraseByteArr[i/B64_PHRASE_BYTES] >> (B64_CHAR_BITS*(i%B64_PHRASE_BYTES)) );
+		// byteArr[i] = b64_char_from_byte(temp);
 	}
 	
-	free(cpyByteArr);
+	free(phraseByteArr);
 	const char * b64Str = (char*)&(*byteArr);
 	return b64Str;
 }
 
-// NOTE: Little-endian
+// NOTE: System is little-endian
 int main()
 {
 	// const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-	const char sourceStr[256] = "414141424242";
+	const char sourceStr[256] = "0F0F0F";
 	// printf("We need to convert 0x%s to base 64.\n", sourceStr);
 	// char hexNumStr[6*sizeof(char)] = "000001";
 	
@@ -110,7 +96,7 @@ int main()
 	// short success = byte_arr_from_hex_str(hexNumStr, buff);
 	// printf("Padded buffer came back with status %d\nReading the padded buffer: %d, %d\n", success, buff[0], buff[1]);
 	
-	unsigned char * buff = mutate_hex_str_to_byte_arr(sourceStr, strlen(sourceStr));	// Big-endian
+	unsigned char * buff = mutate_hex_str_to_byte_arr(sourceStr, strlen(sourceStr));
 	printf("%s\n", buff);	// Decoded string representation
 	
 	// const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(hexNumStr)/2));
