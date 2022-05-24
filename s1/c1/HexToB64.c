@@ -9,27 +9,7 @@ unsigned char byte_from_hex_char(const char hexChar)
 	return byte;	// We only care about the least significant half of this byte.
 }
 
-// int byte_arr_from_hex_str(const char * hexStr, unsigned char * byteArr)
-// {
-// 	short length = strlen(hexStr);
-	
-// 	for(short i = 0; i < length; i++)
-// 		byteArr[i] = byte_from_hex_char(hexStr[i]);
-	
-// 	unsigned char buffContiguous[(length+1)/2];
-	
-// 	for(short i = 0; i < length; i+=2)
-// 	{
-// 		buffContiguous[(i/2)] = ( byteArr[i] | (byteArr[i+1] << 4) );	// Stuff all the half-bytes into contiguous blocks.
-// 		byteArr[i] = buffContiguous[(i/2)];
-// 	}
-	
-// 	return 1;	// True
-// }
-
-// TODO: Try mutating the input hexStr by reinterpreting with different pointers.
-//	Input hex sting pointer, mutate to byte list, get out unsigned char buffer.
-//	mutate_hex_str_to_byte_arr()
+// FIXME: Interprets the byte array backwards.
 unsigned char * mutate_hex_str_to_byte_arr(const char * hexStr, int length)
 {
 	unsigned char * byteArr = (unsigned char *)(&(*hexStr));
@@ -48,7 +28,7 @@ unsigned char * mutate_hex_str_to_byte_arr(const char * hexStr, int length)
 
 char b64_char_from_byte(const unsigned char byte)
 {
-	const char b64Alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";	// https://datatracker.ietf.org/doc/html/rfc4648#page-5
+	const char b64Alphabet[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";	// https://datatracker.ietf.org/doc/html/rfc4648#page-5
 	// Pad character '=' not included.
 	return b64Alphabet[(short)byte];
 }
@@ -65,15 +45,16 @@ const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 		phraseByteArr[i/B64_PHRASE_BYTES] = *((int *)(byteArr+i));
 	
 	// TODO: Read b64 chars from phraseByteArr
-	const short B64_CHAR_BITS = 6;
 	const unsigned char B64_CHAR_BITMASK = 0x3F;
+	const short B64_CHAR_BITS = 6;
+	const short TOTAL_B64_CHARS = NUM_B64_PHRASES * B64_PHRASE_CHARS;
 	unsigned char temp;
-	for(short i = 0; i < (NUM_B64_PHRASES*B64_PHRASE_CHARS); i++)	// FIXME: This loop should run more than on iteration per byte, since b64 characters are smaller than a byte.
+	for(short i = 0; i < TOTAL_B64_CHARS; i++)	// FIXME: This loop should run more than on iteration per byte, since b64 characters are smaller than a byte.
 	{
-		temp = B64_CHAR_BITMASK & phraseByteArr[i/B64_PHRASE_BYTES];
+		byteArr[TOTAL_B64_CHARS-1-i] = B64_CHAR_BITMASK & phraseByteArr[i/B64_PHRASE_CHARS];
 		phraseByteArr[i/B64_PHRASE_CHARS] >>= B64_CHAR_BITS;
-		// temp = B64_CHAR_BITMASK & ( phraseByteArr[i/B64_PHRASE_BYTES] >> (B64_CHAR_BITS*(i%B64_PHRASE_BYTES)) );
-		// byteArr[i] = b64_char_from_byte(temp);
+		// byteArr[TOTAL_B64_CHARS-1-i] = B64_CHAR_BITMASK & ( phraseByteArr[i/B64_PHRASE_CHARS] >> (B64_CHAR_BITS*(i%B64_PHRASE_CHARS)) );
+		byteArr[TOTAL_B64_CHARS-1-i] = b64_char_from_byte(byteArr[TOTAL_B64_CHARS-1-i]);
 	}
 	
 	free(phraseByteArr);
@@ -85,7 +66,7 @@ const char * mutate_byte_arr_to_b64_str(unsigned char * byteArr, int length)
 int main()
 {
 	// const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-	const char sourceStr[256] = "0F0F0F";
+	const char sourceStr[256] = "414243";
 	// printf("We need to convert 0x%s to base 64.\n", sourceStr);
 	// char hexNumStr[6*sizeof(char)] = "000001";
 	
@@ -99,7 +80,6 @@ int main()
 	unsigned char * buff = mutate_hex_str_to_byte_arr(sourceStr, strlen(sourceStr));
 	printf("%s\n", buff);	// Decoded string representation
 	
-	// const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(hexNumStr)/2));
 	const char * b64Str = mutate_byte_arr_to_b64_str(buff, (strlen(sourceStr)/2));
 	printf("%s\n", b64Str);
 	
