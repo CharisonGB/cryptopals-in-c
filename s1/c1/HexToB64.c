@@ -64,7 +64,7 @@ int main()
 	const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
 	
 	unsigned char * buff = make_byte_buff_from_hex_str(sourceStr, strlen(sourceStr));
-	// printf("%s\n", buff);	// Decoded string representation
+	// printf("%s\n", buff);	// Decoded string representation (reversed string)
 	
 	const char * b64Str = make_b64_str_from_byte_buff(buff, strlen(sourceStr)/2);
 	printf("%s\n", b64Str);
