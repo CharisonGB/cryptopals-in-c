@@ -1,5 +1,5 @@
-#ifndef FIXED_XOR_H
-#define FIXED_XOR_H
+#ifndef HEX_BYTE_DUPLEX
+#define HEX_BYTE_DUPLEX
 
 unsigned char hex_char_to_byte(const char hexChar)
 {
@@ -55,4 +55,4 @@ unsigned char * buffer_xor_buffer(unsigned char * buffer0, unsigned char * buffe
 	return result;
 }
 
-#endif // FIXED_XOR_H
+#endif // HEX_BYTE_DUPLEX
