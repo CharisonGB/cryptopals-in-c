@@ -30,6 +30,19 @@ unsigned char * make_filled_buffer(unsigned char val, int length)
 	return buffer; 
 }
 
+void replace_byte(unsigned char source, unsigned char dest, unsigned char * buffer, int length)
+{
+	for(int i = 0; i < length; i++)
+	{
+		if(buffer[i] == source)
+		{
+			buffer[i] = dest;
+		}
+	}
+	
+	return;
+}
+
 const char * make_reverse_str(const char * str)
 {
 	int length = strlen(str);
@@ -53,10 +66,11 @@ int main()
 	
 	unsigned char * keyBuffer = make_filled_buffer(likelyKey, strlen(cyphertext)/2);
 	unsigned char * messageBuffer = buffer_xor_buffer(buffer, keyBuffer, strlen(cyphertext)/2);
+	replace_byte(0x00, 0x20, messageBuffer, strlen(cyphertext)/2);
 	
-	const char * message = make_reverse_str(messageBuffer+22); // FIXME: Spaces are null characters, message strings cut off early.
+	const char * message = make_reverse_str(messageBuffer);
 	
-	// printf("Cyphertext: %s%c\n", buffer, '\0');
+	printf("Cyphertext: %s%c\n", buffer, '\0');
 	printf("Message: %s\n", message);
 	
 	free(buffer);
