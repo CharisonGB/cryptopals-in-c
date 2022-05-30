@@ -5,7 +5,7 @@
 
 const size_t BYTE_MAX = 256;
 
-int * CalculateByteFreq(unsigned char * buffer, int length)
+int * CalculateByteFreq(u_int8_t * buffer, int length)
 {
 	int * freqBuffer = (int *)malloc(BYTE_MAX*sizeof(int));
 	

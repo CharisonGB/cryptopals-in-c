@@ -1,25 +1,27 @@
 #ifndef HEX_BYTE_DUPLEX
 #define HEX_BYTE_DUPLEX
 
-unsigned char hex_char_to_byte(const char hexChar)
+#include <stdlib.h>
+
+u_int8_t hex_char_to_byte(const char hexChar)
 {
-	unsigned char byte = 0;
+	u_int8_t byte = 0;
 	sscanf(&hexChar, "%hhx", &byte);
 	return byte;	// We only care about the least significant half of this byte.
 }
 
-char byte_to_hex_char(unsigned char byte)
+char byte_to_hex_char(u_int8_t byte)
 {
-	unsigned char hexChar[2] = { '\0', '\0' };
+	u_int8_t hexChar[2] = { '\0', '\0' };
 	// printf("%hhx\n", byte);
 	sprintf(&(*hexChar), "%hhx", byte);
 	return *hexChar;	// We only care about the least significant half of this byte.
 }
 
-unsigned char * make_buffer_from_hex_str(const char * hexStr, int length)
+u_int8_t * make_buffer_from_hex_str(const char * hexStr, int length)
 {
-	unsigned char lo, hi;
-	unsigned char * buffer = (unsigned char *)malloc(length/2);
+	u_int8_t lo, hi;
+	u_int8_t * buffer = (u_int8_t *)malloc(length/2);
 	
 	for(short i = 0; i < length; i+=2)
 	{
@@ -31,7 +33,7 @@ unsigned char * make_buffer_from_hex_str(const char * hexStr, int length)
 	return buffer;
 }
 
-const char * make_hex_str_from_buffer(unsigned char * buffer, int length)
+const char * make_hex_str_from_buffer(u_int8_t * buffer, int length)
 {
 	char lo, hi;
 	char * hexStr = (char *)malloc(length*2);
@@ -45,9 +47,9 @@ const char * make_hex_str_from_buffer(unsigned char * buffer, int length)
 	return (const char*)hexStr;
 }
 
-unsigned char * buffer_xor_buffer(unsigned char * buffer0, unsigned char * buffer1, int length)
+u_int8_t * buffer_xor_buffer(u_int8_t * buffer0, u_int8_t * buffer1, int length)
 {
-	unsigned char * result = (unsigned char *)malloc(length);
+	u_int8_t * result = (u_int8_t *)malloc(length);
 	
 	for(int i = 0; i < length; i++)
 		result[i] = buffer0[i] ^ buffer1[i];

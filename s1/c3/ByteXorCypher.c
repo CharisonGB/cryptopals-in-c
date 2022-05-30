@@ -20,9 +20,9 @@ int find_max(int * values, int length)
 	return maxIndex;
 }
 
-unsigned char * make_filled_buffer(unsigned char val, int length)
+u_int8_t * make_filled_buffer(u_int8_t val, int length)
 {
-	unsigned char * buffer = (unsigned char *)malloc(length);
+	u_int8_t * buffer = (u_int8_t *)malloc(length);
 	
 	for(int i = 0; i < length; i++)
 		buffer[i] = val;
@@ -30,7 +30,7 @@ unsigned char * make_filled_buffer(unsigned char val, int length)
 	return buffer; 
 }
 
-void replace_byte(unsigned char source, unsigned char dest, unsigned char * buffer, int length)
+void replace_byte(u_int8_t source, u_int8_t dest, u_int8_t * buffer, int length)
 {
 	for(int i = 0; i < length; i++)
 	{
@@ -59,18 +59,17 @@ int main()
 {
 	const char cyphertext[128] = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
 	
-	unsigned char * buffer = make_buffer_from_hex_str(cyphertext, strlen(cyphertext));
+	u_int8_t * buffer = make_buffer_from_hex_str(cyphertext, strlen(cyphertext));
 	int * byteFreqBuff = CalculateByteFreq(buffer, strlen(cyphertext)/2);
 	
 	int likelyKey = find_max(byteFreqBuff, (int)BYTE_MAX);
 	
-	unsigned char * keyBuffer = make_filled_buffer(likelyKey, strlen(cyphertext)/2);
-	unsigned char * messageBuffer = buffer_xor_buffer(buffer, keyBuffer, strlen(cyphertext)/2);
+	u_int8_t * keyBuffer = make_filled_buffer(likelyKey, strlen(cyphertext)/2);
+	u_int8_t * messageBuffer = buffer_xor_buffer(buffer, keyBuffer, strlen(cyphertext)/2);
 	replace_byte(0x00, 0x20, messageBuffer, strlen(cyphertext)/2);
 	
 	const char * message = make_reverse_str(messageBuffer);
 	
-	printf("Cyphertext: %s%c\n", buffer, '\0');
 	printf("Message: %s\n", message);
 	
 	free(buffer);

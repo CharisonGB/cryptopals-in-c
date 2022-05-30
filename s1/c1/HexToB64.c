@@ -2,47 +2,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned char hex_char_to_byte(const char hexChar)
+u_int8_t hex_char_to_byte(const char hexChar)
 {
-	unsigned char byte = 0;
+	u_int8_t byte = 0;
 	sscanf(&hexChar, "%hhx", &byte);
 	return byte;	// We only care about the least significant half of this byte.
 }
 
-unsigned char * make_byte_buff_from_hex_str(const char * hexStr, int length)
+u_int8_t * make_buffer_from_hex_str(const char * hexStr, int length)
 {
-	unsigned char lo, hi;
-	unsigned char * byteBuff = (unsigned char *)malloc(length/2);
+	u_int8_t onesPlace, sixteensPlace;
+	u_int8_t * buffer = (u_int8_t *)malloc(length/2);
 	
 	for(short i = 0; i < length; i+=2)
 	{
-		hi = hex_char_to_byte(hexStr[length-i-2]);	// Read the hex string backwards in pairs.
-		lo = hex_char_to_byte(hexStr[length-i-1]);	// Each converted character only occupies the back half of each byte.
-		byteBuff[(i/2)] = ( (hi << 4) | lo );		// Stuff all the half-bytes into contiguous blocks.
+		sixteensPlace = hex_char_to_byte(hexStr[length-i-2]);		// Read the hex string backwards in pairs.
+		onesPlace = hex_char_to_byte(hexStr[length-i-1]);			// Each converted character only occupies the back half of each byte.
+		buffer[(i/2)] = ( (sixteensPlace << 4) | onesPlace );		// Stuff all the half-bytes into contiguous blocks. Bytes must be big-endian!
 	}
 	
-	return byteBuff;
+	return buffer;
 }
 
-char byte_to_b64_char(const unsigned char byte)
+char byte_to_b64_char(const u_int8_t byte)
 {
 	const char b64Alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";	// https://datatracker.ietf.org/doc/html/rfc4648#page-5
 	// Pad character '=' not included.
-	return b64Alphabet[(short)byte];
+	return b64Alphabet[byte];
 }
 
-const char * make_b64_str_from_byte_buff(unsigned char * byteBuff, int length)
+const char * make_b64_str_from_buffer(u_int8_t * buffer, int length)
 {
 	const short B64_PHRASE_BYTES = 3;
 	const short B64_PHRASE_CHARS = 4;
 	const short NUM_B64_PHRASES = (length+2)/B64_PHRASE_BYTES;
 	
-	unsigned int * phraseByteArr = (unsigned int *)malloc(NUM_B64_PHRASES * sizeof(int));
+	u_int32_t * phraseByteArr = (u_int32_t *)malloc(NUM_B64_PHRASES * sizeof(u_int32_t));
 	
 	for(short i = 0; i < length; i+=B64_PHRASE_BYTES)
-		phraseByteArr[i/B64_PHRASE_BYTES] = *((unsigned int *)(byteBuff+i));
+		phraseByteArr[i/B64_PHRASE_BYTES] = *((u_int32_t *)(buffer+i));
 	
-	const unsigned char B64_CHAR_BITMASK = 0x3F;
+	const u_int8_t B64_CHAR_BITMASK = 0x3F;
 	const short B64_CHAR_BITS = 6;
 	const short TOTAL_B64_CHARS = NUM_B64_PHRASES * B64_PHRASE_CHARS;
 	
@@ -63,10 +63,10 @@ int main()
 {
 	const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
 	
-	unsigned char * buff = make_byte_buff_from_hex_str(sourceStr, strlen(sourceStr));
+	u_int8_t * buff = make_buffer_from_hex_str(sourceStr, strlen(sourceStr));
 	// printf("%s\n", buff);	// Decoded string representation (reversed string)
 	
-	const char * b64Str = make_b64_str_from_byte_buff(buff, strlen(sourceStr)/2);
+	const char * b64Str = make_b64_str_from_buffer(buff, strlen(sourceStr)/2);
 	printf("%s\n", b64Str);
 	
 	free(buff);
