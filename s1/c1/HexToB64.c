@@ -9,7 +9,7 @@ u_int8_t hex_char_to_byte(const char hexChar)
 	return byte;	// We only care about the least significant half of this byte.
 }
 
-u_int8_t * make_buffer_from_hex_str(const char * hexStr, int length)
+u_int8_t * gen_buffer_from_hex_str(const char * hexStr, int length)
 {
 	u_int8_t onesPlace, sixteensPlace;
 	u_int8_t * buffer = (u_int8_t *)malloc(length/2);
@@ -31,7 +31,7 @@ char byte_to_b64_char(const u_int8_t byte)
 	return b64Alphabet[byte];
 }
 
-const char * make_b64_str_from_buffer(u_int8_t * buffer, int length)
+const char * gen_b64_str_from_buffer(u_int8_t * buffer, int length)
 {
 	const short B64_PHRASE_BYTES = 3;
 	const short B64_PHRASE_CHARS = 4;
@@ -63,10 +63,10 @@ int main()
 {
 	const char sourceStr[256] = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
 	
-	u_int8_t * buff = make_buffer_from_hex_str(sourceStr, strlen(sourceStr));
+	u_int8_t * buff = gen_buffer_from_hex_str(sourceStr, strlen(sourceStr));
 	// printf("%s\n", buff);	// Decoded string representation (reversed string)
 	
-	const char * b64Str = make_b64_str_from_buffer(buff, strlen(sourceStr)/2);
+	const char * b64Str = gen_b64_str_from_buffer(buff, strlen(sourceStr)/2);
 	printf("%s\n", b64Str);
 	
 	free(buff);

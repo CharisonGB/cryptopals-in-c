@@ -18,7 +18,7 @@ char byte_to_hex_char(u_int8_t byte)
 	return *hexChar;	// We only care about the least significant half of this byte.
 }
 
-u_int8_t * make_buffer_from_hex_str(const char * hexStr, int length)
+u_int8_t * gen_buffer_from_hex_str(const char * hexStr, int length)
 {
 	u_int8_t lo, hi;
 	u_int8_t * buffer = (u_int8_t *)malloc(length/2);
@@ -33,7 +33,7 @@ u_int8_t * make_buffer_from_hex_str(const char * hexStr, int length)
 	return buffer;
 }
 
-const char * make_hex_str_from_buffer(u_int8_t * buffer, int length)
+const char * gen_hex_str_from_buffer(u_int8_t * buffer, int length)
 {
 	char lo, hi;
 	char * hexStr = (char *)malloc(length*2);
@@ -47,7 +47,7 @@ const char * make_hex_str_from_buffer(u_int8_t * buffer, int length)
 	return (const char*)hexStr;
 }
 
-u_int8_t * buffer_xor_buffer(u_int8_t * buffer0, u_int8_t * buffer1, int length)
+u_int8_t * gen_buffer_xor_buffer(u_int8_t * buffer0, u_int8_t * buffer1, int length)
 {
 	u_int8_t * result = (u_int8_t *)malloc(length);
 	

@@ -5,7 +5,7 @@ DEBUG=gdb
 .SUFFIXES: .c .o .exe
 
 MAIN = ByteXorCypher
-DEPS = ByteXorCypher.h ../c2/XBDuplex.h
+DEPS = BufferGen.h ../c2/XBDuplex.h
 
 %.o: %.c $(DEPS)
 	$(CC) -g -c $< -o $@
